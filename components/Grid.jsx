@@ -9,6 +9,7 @@ const Wrapper = styled.div`
 
 const DraggableElement = styled.div`
   transition: transform .1s
+  user-select: ${props => props.dragging ? 'none': 'auto'}
 `
 
 export class Grid extends Component {
@@ -73,6 +74,7 @@ export class Grid extends Component {
           <SizedElement key={index}>
             {rect => (
               <DraggableElement
+                dragging={this.state.dragging}
                 onMouseDown={this.onMouseDown(index)}
                 onMouseUp={this.onMouseUp(index)}
                 style={this.getChildStyle(index, rect)}
