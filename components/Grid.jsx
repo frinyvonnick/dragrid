@@ -58,6 +58,7 @@ export class Grid extends Component {
     }
     if (isPointInRectangle(this.state.position, leftHalf)) {
       this.lastHoveredElementSide = 'left'
+      return
     }
     this.lastHoveredElementSide = 'right'
   }
