@@ -5,7 +5,7 @@ import { storiesOf } from '@storybook/react';
 import { action } from '@storybook/addon-actions';
 import { linkTo } from '@storybook/addon-links';
 
-import { Grid } from '../components'
+import { Grid } from '../src'
 
 const StyledItem = styled.div`
   background-color: #ddd;
@@ -26,7 +26,7 @@ class Default extends Component {
 
   render() {
     return (
-      <Grid 
+      <Grid
         style={{ maxWidth: '500px' }}
         elements={this.state.data}
         renderElement={(element => <StyledItem>{element}</StyledItem>)}
