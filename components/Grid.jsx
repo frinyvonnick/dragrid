@@ -1,9 +1,18 @@
 import React, { Component, createRef } from 'react'
+import styled from 'styled-components'
 import ReactDOM from 'react-dom'
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+`
+
+const DraggableElement = styled.div`
+  transition: transform .1s
+`
 
 export class Grid extends Component {
   state = {
-    previousProps: {},
     dragging: false,
     draggedElement: undefined,
     position: {},
@@ -11,7 +20,8 @@ export class Grid extends Component {
 
   onMouseMove = e => {
     if (!this.state.dragging) return
-    this.setState({ position: { x: e.clientX, y: e.clientY } })
+    const position = { x: e.clientX, y: e.clientY }
+    this.setState(state => ({ position }))
   }
 
   onMouseDown = index => e => {
@@ -20,46 +30,58 @@ export class Grid extends Component {
 
   onMouseUp = index => e => {
     this.setState({ dragging: false, draggedElement: index, position: {} })
+    const targetIndex = this.lastHoveredElementSide === 'left' ? this.lastHoveredElement: this.lastHoveredElement + 1
+    this.props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
   }
 
-  getChildStyle = (index, rect) => {
+  getChildStyle = (index, rectangle) => {
+    this.updateHoveredElement(index, rectangle)
     if (!this.state.dragging || this.state.draggedElement !== index) return {}
 
-    const x = this.state.position.x - rect.x - rect.width / 2
-    const y = this.state.position.y - rect.y - rect.height / 2
+    const x = this.state.position.x - rectangle.x - rectangle.width / 2
+    const y = this.state.position.y - rectangle.y - rectangle.height / 2
 
     return {
       transform: `translate(${x}px, ${y}px)`
     }
   }
 
+  updateHoveredElement(index, rectangle) {
+    if (!isPointInRectangle(this.state.position, rectangle)) return
+    this.lastHoveredElement = index
+
+    const leftHalf = {
+      x: rectangle.x,
+      y: rectangle.y,
+      width: rectangle.width / 2,
+      height: rectangle.height,
+    }
+    if (isPointInRectangle(this.state.position, leftHalf)) {
+      this.lastHoveredElementSide = 'left'
+    }
+    this.lastHoveredElementSide = 'right'
+  }
+
   render () {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          ...this.props.style,
-        }}
+      <Wrapper
+        style={this.props.style}
         onMouseMove={this.onMouseMove}
       >
         {this.props.elements.map((element, index) => (
-          <SizedElement>
+          <SizedElement key={index}>
             {rect => (
-              <div
+              <DraggableElement
                 onMouseDown={this.onMouseDown(index)}
                 onMouseUp={this.onMouseUp(index)}
-                style={{
-                  transition: 'transform .1s',
-                  ...this.getChildStyle(index, rect),
-                }}
+                style={this.getChildStyle(index, rect)}
               >
                 {this.props.renderElement(element, index)}
-              </div>
+              </DraggableElement>
             )}
           </SizedElement>
         ))}
-      </div>
+      </Wrapper>
     )
   }
 }
@@ -76,4 +98,26 @@ class SizedElement extends Component {
       <div ref={this.ref}>{this.props.children(rect)}</div>
     )
   }
+}
+
+function isPointInRectangle(point, rectangle) {
+  return rectangle.x <= point.x
+    && point.x <= rectangle.x + rectangle.width
+    && rectangle.y <= point.y
+    && point.y <= rectangle.y + rectangle.height
+}
+
+function debounce(fn, ms = 0) {
+  let timeoutId
+  return function(...args) {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), ms)
+  }
+}
+
+function interpolate(a, b, frac) // points A and B, frac between 0 and 1
+{
+  var nx = a.x+(b.x-a.x)*frac;
+  var ny = a.y+(b.y-a.y)*frac;
+  return {x:nx,  y:ny};
 }
