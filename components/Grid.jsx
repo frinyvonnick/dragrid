@@ -108,17 +108,3 @@ function isPointInRectangle(point, rectangle) {
     && point.y <= rectangle.y + rectangle.height
 }
 
-function debounce(fn, ms = 0) {
-  let timeoutId
-  return function(...args) {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn.apply(this, args), ms)
-  }
-}
-
-function interpolate(a, b, frac) // points A and B, frac between 0 and 1
-{
-  var nx = a.x+(b.x-a.x)*frac;
-  var ny = a.y+(b.y-a.y)*frac;
-  return {x:nx,  y:ny};
-}
