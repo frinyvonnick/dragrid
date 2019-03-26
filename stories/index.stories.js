@@ -31,7 +31,6 @@ class Default extends Component {
         elements={this.state.data}
         renderElement={(element => <StyledItem>{element}</StyledItem>)}
         onDrop={(elementIndex, targetIndex) => {
-          console.log(elementIndex, targetIndex)
           const copy = [...this.state.data]
           const element = copy.splice(elementIndex, 1)
           copy.splice(targetIndex, 0, element)
