@@ -46,7 +46,7 @@ class Example extends Component {
 }
 ```
 
-Dragrid uses storybook for development purpose you can also checkout stories for a more concrete example.
+Dragrid uses storybook for development purpose you can also check out stories for a more concrete example.
 
 ```bash
 npm install
