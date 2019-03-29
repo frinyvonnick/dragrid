@@ -8,7 +8,6 @@ const Wrapper = styled.div`
 `
 
 const DraggableElement = styled.div`
-  transition: transform .1s
   user-select: ${props => props.dragging ? 'none': 'auto'}
 `
 
@@ -43,7 +42,8 @@ export class Grid extends Component {
     const y = this.state.position.y - rectangle.y - rectangle.height / 2
 
     return {
-      transform: `translate(${x}px, ${y}px)`
+      transform: `translate(${x}px, ${y}px)`,
+      transition: 'transform .1s',
     }
   }
 
