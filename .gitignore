@@ -62,3 +62,8 @@ typings/
 
 CHANGELOG.json
 .vscode
+
+# compiled files
+lib
+
+.DS_Store
