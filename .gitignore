@@ -65,3 +65,5 @@ CHANGELOG.json
 
 # compiled files
 lib
+
+.DS_Store
