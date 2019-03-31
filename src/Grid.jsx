@@ -43,6 +43,7 @@ export class Grid extends Component {
 
     return {
       transform: `translate(${x}px, ${y}px)`,
+      cursor: 'move',
       transition: 'transform .1s',
       opacity: '.7',
     }
