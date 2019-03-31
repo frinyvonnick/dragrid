@@ -6,6 +6,7 @@ import { action } from '@storybook/addon-actions';
 import { linkTo } from '@storybook/addon-links';
 
 import { Grid } from '../src'
+import './stories.css'
 
 const StyledItem = styled.div`
   background-color: #ddd;
@@ -41,7 +42,33 @@ class Default extends Component {
   }
 }
 
+class WithClassName extends Component {
+  state = {
+    data: [1, 2, 3, 4, 5, 6],
+  }
+
+  render() {
+    return (
+      <Grid
+        style={{ maxWidth: '500px' }}
+        elements={this.state.data}
+        renderElement={(element => <StyledItem>{element}</StyledItem>)}
+        elementClassName="some-class-name"
+        onDrop={(elementIndex, targetIndex) => {
+          const copy = [...this.state.data]
+          const element = copy.splice(elementIndex, 1)
+          copy.splice(targetIndex, 0, element)
+          this.setState({ data: copy })
+        }}
+      />
+    )
+  }
+}
+
 storiesOf('Grid', module)
   .add('default', () => (
     <Default />
+  ))
+  .add('with className', () => (
+    <WithClassName />
   ))

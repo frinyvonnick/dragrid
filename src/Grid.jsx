@@ -73,7 +73,10 @@ export class Grid extends Component {
         onMouseMove={this.onMouseMove}
       >
         {this.props.elements.map((element, index) => (
-          <SizedElement key={index}>
+          <SizedElement
+            key={index}
+            className={this.props.elementClassName}
+          >
             {rect => (
               <DraggableElement
                 dragging={this.state.dragging}
@@ -100,7 +103,7 @@ class SizedElement extends Component {
   render() {
     const rect = this.ref.current ? this.ref.current.getBoundingClientRect() : {}
     return (
-      <div ref={this.ref}>{this.props.children(rect)}</div>
+      <div className={this.props.className} ref={this.ref}>{this.props.children(rect)}</div>
     )
   }
 }
