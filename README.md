@@ -1,10 +1,10 @@
-![Logo of Dragrid](https://raw.githubusercontent.com/frinyvonnick/dragrid/blob/master/misc/logo.png)
+![Logo of Dragrid](https://raw.githubusercontent.com/frinyvonnick/dragrid/master/misc/logo.png)
 
 # Dragrid
 
 Simple grid with dragging feature for React
 
-![Demonstration of dragrid](https://raw.githubusercontent.com/frinyvonnick/dragrid/blob/master/misc/demo.gif)
+![Demonstration of dragrid](https://raw.githubusercontent.com/frinyvonnick/dragrid/master/misc/demo.gif)
 
 ## Install
 
