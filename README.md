@@ -15,7 +15,7 @@ yarn add dragrid
 
 using npm:
 ```bash
-yarn add dragrid
+npm install dragrid
 ```
 
 ## Usage 
