@@ -1,4 +1,4 @@
-import React, { Component, createRef, useState, useRef } from 'react'
+import React, { Component, createRef, useState, useReducer, useRef } from 'react'
 import styled from 'styled-components'
 import ReactDOM from 'react-dom'
 
@@ -12,27 +12,28 @@ const DraggableElement = styled.div`
 `
 
 export function Grid(props) {
-  const [dragging, setDragging] = useState(false)
-  const [draggedElement, setDraggedElement] = useState(undefined)
-  const [position, setPosition] = useState({})
-  const [lastHoveredElement, setLastHoveredElement] = useState(undefined)
-  const [lastHoveredElementSide, setLastHoveredElementSide] = useState(undefined)
+  const [
+    {
+      dragging,
+      draggedElement,
+      position,
+    },
+    dispatch,
+  ] = useReducer(reducer, getInitialState())
+
+  // Had to handle this logic separately otherwise a maximum call state error is triggered
+  const [lastHoveredElement, setLastHoveredElement] = useState()
+  const [lastHoveredElementSide, setLastHoveredElementSide] = useState()
 
   const onMouseMove = e => {
     if (!dragging) return
-    const position = { x: e.clientX, y: e.clientY }
-    setPosition(position)
+    dispatch({ type: 'ON_MOUSE_MOVE', x: e.clientX, y: e.clientY })
   }
 
-  const onMouseDown = index => e => {
-    setDragging(true)
-    setDraggedElement(index)
-  }
+  const onMouseDown = index => e => dispatch({ type: 'ON_MOUSE_DOWN', index })
 
   const onMouseUp = index => e => {
-    setDragging(false)
-    setDraggedElement(index)
-    setPosition({})
+    dispatch({ type: 'ON_MOUSE_UP', index })
     const targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
     props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
   }
@@ -47,11 +48,8 @@ export function Grid(props) {
       width: rectangle.width / 2,
       height: rectangle.height,
     }
-    if (isPointInRectangle(position, leftHalf)) {
-      setLastHoveredElementSide('left')
-      return
-    }
-    setLastHoveredElementSide('right')
+
+    setLastHoveredElementSide(isPointInRectangle(position, leftHalf) ? 'left' : 'right')
   }
 
   const getChildStyle = (index, rectangle) => {
@@ -95,6 +93,38 @@ export function Grid(props) {
   )
 }
 
+function getInitialState() {
+  return {
+    dragging: false,
+    position: {},
+  }
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'ON_MOUSE_MOVE':
+      return {
+        ...state,
+        position: { x: action.x, y: action.y }
+      }
+    case 'ON_MOUSE_DOWN':
+      return {
+        ...state,
+        dragging: true,
+        draggedElement: action.index,
+      }
+    case 'ON_MOUSE_UP':
+      return {
+        ...state,
+        dragging: false,
+        draggedElement: action.index,
+        position: {},
+      }
+    default:
+      throw new Error();
+    }
+}
+
 function SizedElement(props) {
   const ref = useRef(null)
 
@@ -102,7 +132,7 @@ function SizedElement(props) {
   return (
     <div className={props.className} ref={ref}>{props.children(rect)}</div>
   )
-} 
+}
 
 function isPointInRectangle(point, rectangle) {
   return rectangle.x <= point.x
