@@ -1,4 +1,4 @@
-import React, { Component, createRef, useState, useReducer, useRef } from 'react'
+import React, { Component, createRef, useState, useReducer, useRef, useCallback } from 'react'
 import styled from 'styled-components'
 import ReactDOM from 'react-dom'
 
@@ -28,47 +28,59 @@ export function Grid(props) {
   const [lastHoveredElement, setLastHoveredElement] = useState()
   const [lastHoveredElementSide, setLastHoveredElementSide] = useState()
 
-  const onMouseMove = e => {
-    if (!dragging) return
-    dispatch({ type: 'ON_MOUSE_MOVE', x: e.clientX, y: e.clientY })
-  }
+  const onMouseMove = useCallback(
+    e => {
+      if (!dragging) return
+      dispatch({ type: 'ON_MOUSE_MOVE', x: e.clientX, y: e.clientY })
+    },
+    [dragging],
+  )
 
   const onMouseDown = index => e => dispatch({ type: 'ON_MOUSE_DOWN', index })
 
-  const onMouseUp = index => e => {
-    dispatch({ type: 'ON_MOUSE_UP', index })
-    const targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
-    props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
-  }
+  const onMouseUp = useCallback(
+    index => e => {
+      dispatch({ type: 'ON_MOUSE_UP', index })
+      const targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
+      props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
+    },
+    [lastHoveredElement, lastHoveredElementSide],
+  )
 
-  const updateHoveredElement = (index, rectangle) => {
-    if (!isPointInRectangle(position, rectangle)) return
-    setLastHoveredElement(index)
+  const updateHoveredElement = useCallback(
+    (index, rectangle) => {
+      if (!isPointInRectangle(position, rectangle)) return
+      setLastHoveredElement(index)
 
-    const leftHalf = {
-      x: rectangle.x,
-      y: rectangle.y,
-      width: rectangle.width / 2,
-      height: rectangle.height,
-    }
+      const leftHalf = {
+        x: rectangle.x,
+        y: rectangle.y,
+        width: rectangle.width / 2,
+        height: rectangle.height,
+      }
 
-    setLastHoveredElementSide(isPointInRectangle(position, leftHalf) ? 'left' : 'right')
-  }
+      setLastHoveredElementSide(isPointInRectangle(position, leftHalf) ? 'left' : 'right')
+    }, 
+    [position],
+  )
 
-  const getChildStyle = (index, rectangle) => {
-    updateHoveredElement(index, rectangle)
-    if (!dragging || draggedElement !== index) return {}
+  const getChildStyle = useCallback(
+    (index, rectangle) => {
+      updateHoveredElement(index, rectangle)
+      if (!dragging || draggedElement !== index) return {}
 
-    const x = position.x - rectangle.x - rectangle.width / 2
-    const y = position.y - rectangle.y - rectangle.height / 2
+      const x = position.x - rectangle.x - rectangle.width / 2
+      const y = position.y - rectangle.y - rectangle.height / 2
 
-    return {
-      transform: `translate(${x}px, ${y}px)`,
-      cursor: 'move',
-      transition: 'transform .1s',
-      opacity: '.7',
-    }
-  }
+      return {
+        transform: `translate(${x}px, ${y}px)`,
+        cursor: 'move',
+        transition: 'transform .1s',
+        opacity: '.7',
+      }
+    },
+    [dragging, draggedElement, position],
+  )
 
   return (
     <Wrapper
@@ -117,7 +129,7 @@ function reducer(state, action) {
         position: {},
       }
     default:
-      throw Error(`The action "${action.type}" is not supported.`);
+      throw Error(`The action "${action.type}" is not supported`);
     }
 }
 
