@@ -19,7 +19,10 @@ export function Grid(props) {
       position,
     },
     dispatch,
-  ] = useReducer(reducer, getInitialState())
+  ] = useReducer(reducer, {
+    dragging: false,
+    position: {},
+  })
 
   // Had to handle this logic separately otherwise a maximum call state error is triggered
   const [lastHoveredElement, setLastHoveredElement] = useState()
@@ -93,13 +96,6 @@ export function Grid(props) {
   )
 }
 
-function getInitialState() {
-  return {
-    dragging: false,
-    position: {},
-  }
-}
-
 function reducer(state, action) {
   switch (action.type) {
     case 'ON_MOUSE_MOVE':
@@ -121,7 +117,7 @@ function reducer(state, action) {
         position: {},
       }
     default:
-      throw new Error();
+      throw Error(`The action "${action.type}" is not supported.`);
     }
 }
 
