@@ -1,4 +1,4 @@
-import React, { Component, createRef } from 'react'
+import React, { Component, createRef, useState, useReducer, useRef, useCallback } from 'react'
 import styled from 'styled-components'
 import ReactDOM from 'react-dom'
 
@@ -11,101 +11,135 @@ const DraggableElement = styled.div`
   user-select: ${props => props.dragging ? 'none': 'auto'}
 `
 
-export class Grid extends Component {
-  state = {
+export function Grid(props) {
+  const [
+    {
+      dragging,
+      draggedElement,
+      position,
+    },
+    dispatch,
+  ] = useReducer(reducer, {
     dragging: false,
-    draggedElement: undefined,
     position: {},
-  }
+  })
 
-  onMouseMove = e => {
-    if (!this.state.dragging) return
-    const position = { x: e.clientX, y: e.clientY }
-    this.setState(state => ({ position }))
-  }
+  // Had to handle this logic separately otherwise a maximum call state error is triggered
+  const [lastHoveredElement, setLastHoveredElement] = useState()
+  const [lastHoveredElementSide, setLastHoveredElementSide] = useState()
 
-  onMouseDown = index => e => {
-    this.setState({ dragging: true, draggedElement: index })
-  }
+  const onMouseMove = useCallback(
+    e => {
+      if (!dragging) return
+      dispatch({ type: 'ON_MOUSE_MOVE', x: e.clientX, y: e.clientY })
+    },
+    [dragging],
+  )
 
-  onMouseUp = index => e => {
-    this.setState({ dragging: false, draggedElement: index, position: {} })
-    const targetIndex = this.lastHoveredElementSide === 'left' ? this.lastHoveredElement: this.lastHoveredElement + 1
-    this.props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
-  }
+  const onMouseDown = index => e => dispatch({ type: 'ON_MOUSE_DOWN', index })
 
-  getChildStyle = (index, rectangle) => {
-    this.updateHoveredElement(index, rectangle)
-    if (!this.state.dragging || this.state.draggedElement !== index) return {}
+  const onMouseUp = useCallback(
+    index => e => {
+      dispatch({ type: 'ON_MOUSE_UP', index })
+      const targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
+      props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
+    },
+    [lastHoveredElement, lastHoveredElementSide],
+  )
 
-    const x = this.state.position.x - rectangle.x - rectangle.width / 2
-    const y = this.state.position.y - rectangle.y - rectangle.height / 2
+  const updateHoveredElement = useCallback(
+    (index, rectangle) => {
+      if (!isPointInRectangle(position, rectangle)) return
+      setLastHoveredElement(index)
 
-    return {
-      transform: `translate(${x}px, ${y}px)`,
-      cursor: 'move',
-      transition: 'transform .1s',
-      opacity: '.7',
-    }
-  }
+      const leftHalf = {
+        x: rectangle.x,
+        y: rectangle.y,
+        width: rectangle.width / 2,
+        height: rectangle.height,
+      }
 
-  updateHoveredElement(index, rectangle) {
-    if (!isPointInRectangle(this.state.position, rectangle)) return
-    this.lastHoveredElement = index
+      setLastHoveredElementSide(isPointInRectangle(position, leftHalf) ? 'left' : 'right')
+    }, 
+    [position],
+  )
 
-    const leftHalf = {
-      x: rectangle.x,
-      y: rectangle.y,
-      width: rectangle.width / 2,
-      height: rectangle.height,
-    }
-    if (isPointInRectangle(this.state.position, leftHalf)) {
-      this.lastHoveredElementSide = 'left'
-      return
-    }
-    this.lastHoveredElementSide = 'right'
-  }
+  const getChildStyle = useCallback(
+    (index, rectangle) => {
+      updateHoveredElement(index, rectangle)
+      if (!dragging || draggedElement !== index) return {}
 
-  render () {
-    return (
-      <Wrapper
-        style={this.props.style}
-        onMouseMove={this.onMouseMove}
-      >
-        {this.props.elements.map((element, index) => (
-          <SizedElement
-            key={index}
-            className={this.props.elementClassName}
-          >
-            {rect => (
-              <DraggableElement
-                dragging={this.state.dragging}
-                onMouseDown={this.onMouseDown(index)}
-                onMouseUp={this.onMouseUp(index)}
-                style={this.getChildStyle(index, rect)}
-              >
-                {this.props.renderElement(element, index)}
-              </DraggableElement>
-            )}
-          </SizedElement>
-        ))}
-      </Wrapper>
-    )
-  }
+      const x = position.x - rectangle.x - rectangle.width / 2
+      const y = position.y - rectangle.y - rectangle.height / 2
+
+      return {
+        transform: `translate(${x}px, ${y}px)`,
+        cursor: 'move',
+        transition: 'transform .1s',
+        opacity: '.7',
+      }
+    },
+    [dragging, draggedElement, position],
+  )
+
+  return (
+    <Wrapper
+      style={props.style}
+      onMouseMove={onMouseMove}
+    >
+      {props.elements.map((element, index) => (
+        <SizedElement
+          key={index}
+          className={props.elementClassName}
+        >
+          {rect => (
+            <DraggableElement
+              dragging={dragging}
+              onMouseDown={onMouseDown(index)}
+              onMouseUp={onMouseUp(index)}
+              style={getChildStyle(index, rect)}
+            >
+              {props.renderElement(element, index)}
+            </DraggableElement>
+          )}
+        </SizedElement>
+      ))}
+    </Wrapper>
+  )
 }
 
-class SizedElement extends Component {
-  constructor(props) {
-    super(props)
-    this.ref = createRef()
-  }
+function reducer(state, action) {
+  switch (action.type) {
+    case 'ON_MOUSE_MOVE':
+      return {
+        ...state,
+        position: { x: action.x, y: action.y }
+      }
+    case 'ON_MOUSE_DOWN':
+      return {
+        ...state,
+        dragging: true,
+        draggedElement: action.index,
+      }
+    case 'ON_MOUSE_UP':
+      return {
+        ...state,
+        dragging: false,
+        draggedElement: action.index,
+        position: {},
+      }
+    default:
+      throw Error(`The action "${action.type}" is not supported`);
+    }
+}
 
-  render() {
-    const rect = this.ref.current ? this.ref.current.getBoundingClientRect() : {}
-    return (
-      <div className={this.props.className} ref={this.ref}>{this.props.children(rect)}</div>
-    )
-  }
+function SizedElement(props) {
+  const ref = useRef(null)
+
+  const rect = ref.current ? ref.current.getBoundingClientRect() : {}
+  return (
+    <div className={props.className} ref={ref}>{props.children(rect)}</div>
+  )
 }
 
 function isPointInRectangle(point, rectangle) {
