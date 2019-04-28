@@ -31,11 +31,8 @@ class Default extends Component {
         style={{ maxWidth: '500px' }}
         elements={this.state.data}
         renderElement={(element => <StyledItem>{element}</StyledItem>)}
-        onDrop={(elementIndex, targetIndex) => {
-          const copy = [...this.state.data]
-          const element = copy.splice(elementIndex, 1)
-          copy.splice(targetIndex, 0, element)
-          this.setState({ data: copy })
+        onDrop={(newList) => {
+          this.setState({ data: newList })
         }}
       />
     )
@@ -54,11 +51,8 @@ class WithClassName extends Component {
         elements={this.state.data}
         renderElement={(element => <StyledItem>{element}</StyledItem>)}
         elementClassName="some-class-name"
-        onDrop={(elementIndex, targetIndex) => {
-          const copy = [...this.state.data]
-          const element = copy.splice(elementIndex, 1)
-          copy.splice(targetIndex, 0, element)
-          this.setState({ data: copy })
+        onDrop={(newList) => {
+          this.setState({ data: newList })
         }}
       />
     )

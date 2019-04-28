@@ -41,8 +41,16 @@ export function Grid(props) {
   const onMouseUp = useCallback(
     index => e => {
       dispatch({ type: 'ON_MOUSE_UP', index })
-      const targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
-      props.onDrop(index, index < targetIndex ? targetIndex - 1 : targetIndex)
+      let targetIndex = lastHoveredElementSide === 'left' ? lastHoveredElement: lastHoveredElement + 1
+      if (index < targetIndex) {
+        targetIndex--
+      }
+
+      const copy = [...props.elements]
+      const [element] = copy.splice(index, 1)
+      copy.splice(targetIndex, 0, element)
+
+      props.onDrop(copy)
     },
     [lastHoveredElement, lastHoveredElementSide],
   )
