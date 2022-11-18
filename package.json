@@ -26,7 +26,7 @@
     "@storybook/addon-actions": "^5.0.10",
     "@storybook/addon-links": "^5.0.5",
     "@storybook/addons": "^5.0.5",
-    "@storybook/react": "^5.0.10",
+    "@storybook/react": "^6.5.13",
     "babel-loader": "^8.0.5"
   }
 }
